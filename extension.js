@@ -88,7 +88,14 @@ export default class NotificationThemeExtension extends Extension {
     this._showAppsButtonId = this._dash._showAppsIcon.toggleButton.connect('clicked', () => {
       const { currentState } = Main.overview._overview.controls._stateAdjustment.getStateTransitionParams();
 
-      if (currentState === ControlsState.WINDOW_PICKER) {
+      journal(`cs ${currentState}`);
+
+      // Check if overview is actually visible
+      if (!Main.overview.visible) {
+        // Overview is hidden, show APP_GRID
+        Main.overview.show(ControlsState.APP_GRID);
+      } else if (currentState === ControlsState.WINDOW_PICKER) {
+        // In WINDOW_PICKER, switch to APP_GRID instantly
         Main.overview._overview.controls._stateAdjustment.value = ControlsState.APP_GRID;
         Main.overview._overview.controls.dash.showAppsButton.checked = true;
         // // In WINDOW_PICKER, switch to APP_GRID
@@ -99,6 +106,15 @@ export default class NotificationThemeExtension extends Extension {
         //     Main.overview._overview.controls.dash.showAppsButton.checked = true;
         //   }
         // });
+      } else if (currentState === ControlsState.APP_GRID) {
+        // Already in APP_GRID, so hide overview
+        Main.overview.hide();
+      }
+
+      if (currentState === ControlsState.WINDOW_PICKER) {
+        Main.overview._overview.controls._stateAdjustment.value = ControlsState.APP_GRID;
+        Main.overview._overview.controls.dash.showAppsButton.checked = true;
+
       } else if (currentState === ControlsState.HIDDEN) {
         // Overview not visible, show APP_GRID
         Main.overview.show(ControlsState.APP_GRID);
