@@ -2,6 +2,7 @@ import GLib from 'gi://GLib';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { Dash } from 'resource:///org/gnome/shell/ui/dash.js';
+import { ControlsState } from 'resource:///org/gnome/shell/ui/overviewControls.js';
 import St from 'gi://St';
 import Clutter from 'gi://Clutter';
 import { setLogging, setLogFn, journal } from './utils.js';
@@ -42,7 +43,7 @@ export default class NotificationThemeExtension extends Extension {
       reactive: true,
       layout_manager: new Clutter.BinLayout(),
       x_align: Clutter.ActorAlign.CENTER,
-      y_align: Clutter.ActorAlign.END,
+      y_align: Clutter.ActorAlign.CENTER,
     });
 
     // Create a new dash instance for our dock
@@ -50,8 +51,19 @@ export default class NotificationThemeExtension extends Extension {
     this._dash.iconSize = 96;
     this._dash._maxIconSize = 96;
 
+    // Connect Show Apps button to overview
+    this._showAppsButtonId = this._dash._showAppsIcon.toggleButton.connect('clicked', () => {
+      if (Main.overview.visible) {
+        Main.overview.hide();
+      } else {
+        Main.overview.show(ControlsState.APP_GRID);
+      }
+    });
+
     // Add dash to container
     this._dockContainer.add_child(this._dash);
+
+    this._dockContainer.set_position(1000,1000);
 
     // Add to main layout
     Main.layoutManager.addChrome(this._dockContainer, {
@@ -74,6 +86,12 @@ export default class NotificationThemeExtension extends Extension {
 
   disable() {
     // Disconnect signals
+    // Disconnect signals
+    if (this._showAppsButtonId) {
+      this._dash._showAppsIcon.toggleButton.disconnect(this._showAppsButtonId);
+      this._showAppsButtonId = null;
+    }
+
     if (this._overviewShowingId) {
       Main.overview.disconnect(this._overviewShowingId);
       this._overviewShowingId = null;
