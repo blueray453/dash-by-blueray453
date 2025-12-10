@@ -1,11 +1,40 @@
 import GLib from 'gi://GLib';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import { Dash } from 'resource:///org/gnome/shell/ui/dash.js';
 import { ControlsState } from 'resource:///org/gnome/shell/ui/overviewControls.js';
+import { Dash } from 'resource:///org/gnome/shell/ui/dash.js';
 import St from 'gi://St';
 import Clutter from 'gi://Clutter';
+import GObject from 'gi://GObject';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import { setLogging, setLogFn, journal } from './utils.js';
+
+
+class DashMenuButton extends PanelMenu.Button {
+  static {
+    GObject.registerClass(this);
+  }
+
+  _init(dash) {
+    super._init(0.5, 'Dash Menu');
+    this._dash = dash;
+    // Create icon for the panel button
+    let icon = new St.Icon({
+      icon_name: 'view-app-grid-symbolic',
+      style_class: 'system-status-icon',
+    });
+    this.add_child(icon);
+    // Create a container for the dash in the menu
+    let dashContainer = new St.Widget({
+      layout_manager: new Clutter.BinLayout(),
+    });
+    dashContainer.add_child(this._dash);
+    // Add to menu
+    this.menu.box.add_child(dashContainer);
+    // Prevent menu from closing when clicking on dash
+    this.menu.actor.reactive = true;
+  }
+}
 
 export default class NotificationThemeExtension extends Extension {
   enable() {
@@ -51,6 +80,10 @@ export default class NotificationThemeExtension extends Extension {
     this._dash.iconSize = 96;
     this._dash._maxIconSize = 96;
 
+    // Create panel button with dash menu
+    this._indicator = new DashMenuButton(this._dash);
+    Main.panel.addToStatusArea('dash-menu', this._indicator);
+
     // Connect Show Apps button to overview
     this._showAppsButtonId = this._dash._showAppsIcon.toggleButton.connect('clicked', () => {
       if (Main.overview.visible) {
@@ -60,16 +93,16 @@ export default class NotificationThemeExtension extends Extension {
       }
     });
 
-    // Add dash to container
-    this._dockContainer.add_child(this._dash);
+    // // Add dash to container
+    // this._dockContainer.add_child(this._dash);
 
-    this._dockContainer.set_position(1000,1000);
+    // this._dockContainer.set_position(1000,1000);
 
-    // Add to main layout
-    Main.layoutManager.addChrome(this._dockContainer, {
-      affectsStruts: true,
-      trackFullscreen: true,
-    });
+    // // Add to main layout
+    // Main.layoutManager.addChrome(this._dockContainer, {
+    //   affectsStruts: true,
+    //   trackFullscreen: true,
+    // });
 
     // Hide original dash when overview shows
     this._overviewShowingId = Main.overview.connect('showing', () => {
