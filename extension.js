@@ -32,7 +32,9 @@ export default class NotificationThemeExtension extends Extension {
     // journalctl -f -o cat SYSLOG_IDENTIFIER=fix-dash-by-blueray453
     journal(`Enabled`);
 
-    this._oldDash = Main.overview.dash;
+    // Hide the original dash in overview
+    this._originalDash = Main.overview.dash;
+    this._originalDashParent = this._originalDash.get_parent();
 
     // Create new dash container
     this._dockContainer = new St.Widget({
@@ -43,34 +45,31 @@ export default class NotificationThemeExtension extends Extension {
       y_align: Clutter.ActorAlign.END,
     });
 
-    // Get the dash from overview
-    this._dash = Main.overview.dash;
-
-    // Set icon size to 96
+    // Create a new dash instance for our dock
+    this._dash = new Dash();
     this._dash.iconSize = 96;
     this._dash._maxIconSize = 96;
 
-    // Reparent dash to our container
-    this._dash.get_parent()?.remove_child(this._dash);
+    // Add dash to container
     this._dockContainer.add_child(this._dash);
 
-    // Add to panel container (main stage)
+    // Add to main layout
     Main.layoutManager.addChrome(this._dockContainer, {
       affectsStruts: true,
       trackFullscreen: true,
     });
 
-    // Hide dash in overview
+    // Hide original dash when overview shows
     this._overviewShowingId = Main.overview.connect('showing', () => {
-      this._oldDash.hide();
+      this._originalDash.hide();
     });
 
     this._overviewHiddenId = Main.overview.connect('hidden', () => {
-      this._oldDash.hide();
+      this._originalDash.hide();
     });
 
-    // Always show our dock
-    this._dash.show();
+    // Hide it immediately
+    this._originalDash.hide();
   }
 
   disable() {
@@ -85,19 +84,20 @@ export default class NotificationThemeExtension extends Extension {
       this._overviewHiddenId = null;
     }
 
-    // Remove dock container
+    // Remove dock container and dash
     if (this._dockContainer) {
       Main.layoutManager.removeChrome(this._dockContainer);
       this._dockContainer.destroy();
       this._dockContainer = null;
     }
 
-    // Restore original dash
-    if (this._oldDash) {
-      this._oldDash.show();
+    // Restore original dash visibility
+    if (this._originalDash) {
+      this._originalDash.show();
     }
 
     this._dash = null;
-    this._oldDash = null;
+    this._originalDash = null;
+    this._originalDashParent = null;
   }
 }
