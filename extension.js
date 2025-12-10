@@ -47,11 +47,11 @@ export default class NotificationThemeExtension extends Extension {
       }
 
       GLib.log_structured(
-        'fix-dash-by-blueray453',
+        'dash-by-blueray453',
         level,
         {
           MESSAGE: `${msg}`,
-          SYSLOG_IDENTIFIER: 'fix-dash-by-blueray453',
+          SYSLOG_IDENTIFIER: 'dash-by-blueray453',
           CODE_FILE: GLib.filename_from_uri(import.meta.url)[0]
         }
       );
@@ -59,7 +59,7 @@ export default class NotificationThemeExtension extends Extension {
 
     setLogging(true);
 
-    // journalctl -f -o cat SYSLOG_IDENTIFIER=fix-dash-by-blueray453
+    // journalctl -f -o cat SYSLOG_IDENTIFIER=dash-by-blueray453
     journal(`Enabled`);
 
     // Hide the original dash in overview
@@ -86,11 +86,29 @@ export default class NotificationThemeExtension extends Extension {
 
     // Connect Show Apps button to overview
     this._showAppsButtonId = this._dash._showAppsIcon.toggleButton.connect('clicked', () => {
-      if (Main.overview.visible) {
-        Main.overview.hide();
-      } else {
+      const { currentState } = Main.overview._overview.controls._stateAdjustment.getStateTransitionParams();
+
+      if (currentState === ControlsState.WINDOW_PICKER) {
+        Main.overview._overview.controls._stateAdjustment.value = ControlsState.APP_GRID;
+        Main.overview._overview.controls.dash.showAppsButton.checked = true;
+        // // In WINDOW_PICKER, switch to APP_GRID
+        // Main.overview._overview.controls._stateAdjustment.ease(ControlsState.APP_GRID, {
+        //   duration: 250, // SIDE_CONTROLS_ANIMATION_TIME
+        //   mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+        //   onComplete: () => {
+        //     Main.overview._overview.controls.dash.showAppsButton.checked = true;
+        //   }
+        // });
+      } else if (currentState === ControlsState.HIDDEN) {
+        // Overview not visible, show APP_GRID
         Main.overview.show(ControlsState.APP_GRID);
+      } else if (currentState === ControlsState.APP_GRID) {
+        // Already in APP_GRID, so hide overview
+        Main.overview.hide();
       }
+
+      // Close the menu when interacting with overview
+      this.menu.close();
     });
 
     // // Add dash to container
