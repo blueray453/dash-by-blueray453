@@ -1,0 +1,11 @@
+{
+  "uuid": "dash-by-blueray453",
+  "name": "dash-by-blueray453",
+  "description": "GNOME Shell extension that fix Dash.",
+  "version": 1,
+  "shell-version": [
+    "48",
+    "49"
+  ],
+  "url": "https://github.com/blueray453/dash-by-blueray453"
+}
