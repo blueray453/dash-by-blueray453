@@ -64,7 +64,6 @@ export default class NotificationThemeExtension extends Extension {
 
     // Hide the original dash in overview
     this._originalDash = Main.overview.dash;
-    this._originalDashParent = this._originalDash.get_parent();
 
     // Create new dash container
     this._dockContainer = new St.Widget({
@@ -183,6 +182,5 @@ export default class NotificationThemeExtension extends Extension {
 
     this._dash = null;
     this._originalDash = null;
-    this._originalDashParent = null;
   }
 }
