@@ -175,6 +175,12 @@ export default class NotificationThemeExtension extends Extension {
       this._dockContainer = null;
     }
 
+    // Remove panel button indicator
+    if (this._indicator) {
+      this._indicator.destroy();
+      this._indicator = null;
+    }
+
     // Restore original dash visibility
     if (this._originalDash) {
       this._originalDash.show();
