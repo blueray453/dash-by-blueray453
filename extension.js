@@ -7,8 +7,13 @@ import St from 'gi://St';
 import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
-import { setLogging, setLogFn, journal } from './utils.js';
 
+import {
+  initLogging,
+  createLogger,
+} from './logger.js';
+
+const journal = createLogger(import.meta.url);
 
 class DashMenuButton extends PanelMenu.Button {
   static {
@@ -38,28 +43,7 @@ class DashMenuButton extends PanelMenu.Button {
 
 export default class NotificationThemeExtension extends Extension {
   enable() {
-    setLogFn((msg, error = false) => {
-      let level;
-      if (error) {
-        level = GLib.LogLevelFlags.LEVEL_CRITICAL;
-      } else {
-        level = GLib.LogLevelFlags.LEVEL_MESSAGE;
-      }
-
-      GLib.log_structured(
-        'dash-by-blueray453',
-        level,
-        {
-          MESSAGE: `${msg}`,
-          SYSLOG_IDENTIFIER: 'dash-by-blueray453',
-          CODE_FILE: GLib.filename_from_uri(import.meta.url)[0]
-        }
-      );
-    });
-
-    setLogging(true);
-
-    // journalctl -f -o cat SYSLOG_IDENTIFIER=dash-by-blueray453
+    initLogging(this.uuid, 'both', false);
     journal(`Enabled`);
 
     // Hide the original dash in overview
